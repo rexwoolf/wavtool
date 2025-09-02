@@ -1,0 +1,66 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-linux-macos:
+    name: ${{ matrix.os }} build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: g++ -std=gnu++17 -O2 -o wavtool wavtool.cpp
+
+      - name: Smoke test (sine + info)
+        run: |
+          ./wavtool synth-sine 440 0.1 44100 0.1 test.wav
+          ./wavtool info test.wav
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wavtool-${{ matrix.os }}
+          path: |
+            wavtool
+            test.wav
+
+  build-windows:
+    name: windows-latest build (MSYS2)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up MSYS2 (with g++)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            base-devel
+            mingw-w64-ucrt-x86_64-gcc
+
+      - name: Build
+        shell: msys2 {0}
+        run: g++ -std=gnu++17 -O2 -o wavtool.exe wavtool.cpp
+
+      - name: Smoke test (sine + info)
+        shell: msys2 {0}
+        run: |
+          ./wavtool.exe synth-sine 440 0.1 44100 0.1 test.wav
+          ./wavtool.exe info test.wav
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wavtool-windows
+          path: |
+            wavtool.exe
+            test.wav
