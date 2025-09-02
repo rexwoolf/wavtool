@@ -1,3 +1,5 @@
+![Build](https://github.com/rexwoolf/wavtool/actions/workflows/build.yml/badge.svg)
+
 # WavTool
 Tiny single-file C++17 WAV utility (16-bit PCM, mono/stereo).
 
